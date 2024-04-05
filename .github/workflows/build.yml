@@ -1,0 +1,78 @@
+name: build
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - feature/*
+      - fix/*
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+  schedule:
+    - cron: '0 9 * * 3'
+  workflow_dispatch:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout-code
+        uses: actions/checkout@v4
+      - name: setup-go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.x
+      - name: gofmt
+        run: test -z $(gofmt -l .)
+      - name: go-vet
+        run: go vet ./...
+      - name: staticcheck
+        uses: dominikh/staticcheck-action@v1.3.0
+        with:
+          install-go: false
+  test:
+    name: run-tests
+    strategy:
+      matrix:
+        go-version:
+          - 1.x
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+    runs-on: ${{matrix.os}}
+    steps:
+      - name: setup-go-${{matrix.go-version}}
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{matrix.go-version}}
+      - name: checkout-code
+        uses: actions/checkout@v4
+      - name: test
+        run: go test -race -json -v -coverprofile=coverage.txt ./... 2>&1 | tee /tmp/gotest.log | gotestfmt
+      - name: convert-coverage
+        run: gocover-cobertura < coverage.txt > coverage.xml
+      - name: generate-coverage-report
+        uses: irongut/CodeCoverageSummary@v1.3.0
+        with:
+          filename: coverage.xml
+          badge: false
+          fail_below_min: false
+          format: markdown
+          hide_branch_rate: false
+          hide_complexity: true
+          indicators: true
+          output: both
+          thresholds: '60 80'
+      - name: comment-coverage
+        uses: marocchino/sticky-pull-request-comment@v2
+        if: github.event_name == 'pull_request'
+        with:
+          recreate: true
+          path: code-coverage-results.md
