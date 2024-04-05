@@ -1,6 +1,6 @@
 # azamcodec-go
 
-[![Build Status](https://github.com/azam/azamcodec-go/actions/workflows/build.yml/badge.svg)](https://github.com/azam/azamcodec-go/actions/workflows/build.yml)
+[![Build Status](https://github.com/azam/azamcodec-go/actions/workflows/build.yml/badge.svg?version=latest)](https://github.com/azam/azamcodec-go/actions/workflows/build.yml)
 
 An encoder and decoder implementation in Go for [Azam Codec](https://github.com/azam/azamcodec), a lexicographically sortable multi-section base16 encoding of byte array. Zero external dependencies.
 
